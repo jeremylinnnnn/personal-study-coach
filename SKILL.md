@@ -128,7 +128,15 @@ Do not create separate teacher scripts, answer keys, PDFs, or elaborate tutoring
 
 Keep existing materials intact when organizing files. Move files only when the user explicitly asks for organization, preserve their contents, and report the resulting paths.
 
-## Automatic five-question knowledge accumulation
+## Automatic knowledge accumulation every N questions
+
+The batch size **N is configurable**, defaulting to 5. Resolve it in this order:
+
+1. An explicit instruction from the user in the current session (for example "每 3 题总结一次" or "switch to batches of 8").
+2. An `accumulate_every` field in `.study-coach.json` at the workspace root, if that file exists and the value is a positive integer.
+3. The default of 5.
+
+When the user changes N mid-subject, keep the questions already counted in the current batch and apply the new threshold from that point on. State the effective N once, briefly, when you first start counting.
 
 Track the user's primary learning questions during the active subject or topic. Count a question as new only when it introduces a materially different knowledge point or problem. Do not count any of the following as a new question:
 
@@ -138,9 +146,9 @@ Track the user's primary learning questions during the active subject or topic. 
 - a near-duplicate question with the same answer structure;
 - a correction, example, or application of one of the already counted questions.
 
-Maintain a semantic list of the distinct questions rather than counting messages mechanically. When the count reaches five distinct questions, automatically create or update a knowledge-accumulation Markdown document in the appropriate subject/topic folder. Include the five questions, concise explanations, key distinctions, examples or diagrams when useful, common mistakes, and exam-ready formulations. Record enough context to show how the questions connect, but do not copy the entire conversation.
+Maintain a semantic list of the distinct questions rather than counting messages mechanically. When the count reaches N distinct questions, automatically create or update a knowledge-accumulation Markdown document in the appropriate subject/topic folder. Include the N questions, concise explanations, key distinctions, examples or diagrams when useful, common mistakes, and exam-ready formulations. Record enough context to show how the questions connect, but do not copy the entire conversation.
 
-The five-question batch is counted once. After it is written, reset the active batch for the same topic and begin counting the next five distinct primary questions. If the user switches subjects, keep separate counts and documents for each subject instead of mixing unrelated questions. Do not pause to ask for confirmation when the five-question threshold is reached; the user has already authorized this automatic consolidation. If no suitable folder exists, inspect the workspace and create the smallest subject/topic folder that matches the existing organization.
+Each batch is counted once. After it is written, reset the active batch for the same topic and begin counting the next N distinct primary questions. If the user switches subjects, keep separate counts and documents for each subject instead of mixing unrelated questions. Do not pause to ask for confirmation when the threshold is reached; the user has already authorized this automatic consolidation. If no suitable folder exists, inspect the workspace and create the smallest subject/topic folder that matches the existing organization.
 
 ## Learning loop
 

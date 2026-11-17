@@ -1,110 +1,128 @@
 # personal-study-coach
 
-> A self-study coach for university coursework that starts from your own lecture slides, not from a generic summary.
+使用本地已有的课程资源来辅助学习，可生成课件精讲、自学文档和知识积累等总结性文件。
 
-An agent skill that turns an AI assistant into a lecturer, checker, experiment guide, question writer and note organizer — while keeping the **local course material** as the authority.
+一个 Agent Skill。它把 AI 用作讲师、检查者、实验向导、出题人和笔记整理者，以你手上的课程材料作为主要依据。
 
-## The problem it fixes
+## 三类产出
 
-Ask a model to "explain deadlock" and you get a textbook chapter: correct, generic, and useless for your exam, because your instructor defines it differently, your slides use different notation, and the exam asks for a specific form of answer.
+| 产出 | 使用场景 | 内容 |
+| --- | --- | --- |
+| 课件精讲 | 把一章课件、一份讲义或一张扫描页吃透 | 逐概念拆解：含义、为什么存在、机制、例子、考试答法 |
+| 自学文档 | 把某个主题整理成可以反复看的材料 | 七段结构：白话概念、为什么有它、机制或推导、例子和图、常见错误、考试表述、自测题 |
+| 知识积累 | 连续问了一串问题之后 | 自动归纳：这 N 个问题、简明解释、关键区分、例子、常见错误、考试表述 |
 
-This skill changes the source of truth. Local materials first. When a generic explanation conflicts with the course's, the difference is stated briefly and the **course's** terminology wins.
+知识积累自动触发，不需要每次提醒，见下文「每 N 题积累」。
 
-## What it does
+## 材料优先级
 
-### Source priority
+1. 当前课件、教材、课程笔记、作业、教师材料。
+2. 已有的复习文件、知识清单、实验、以前的答案、整理过的笔记。
+3. 考试大纲、历年卷、补充参考书。
+4. 通用知识和网络来源，只作补充，并标明哪些内容属于推断、约定，或会随教材和版本变化。
 
-1. Current lecture slides, textbook, course notes, assignments, instructor material.
-2. Your own review files, knowledge lists, experiments, previous answers, organized notes.
-3. Exam outlines, past papers, supplementary books.
-4. General knowledge and the web — as supplementation only, with inferences and version-dependent details labelled as such.
+通用解释与课程说法冲突时，skill 简要说明差异，然后采用课程的术语和答题习惯。
 
-Before answering a question about a local document, it actually inspects that file. It also distinguishes **instructions contained inside a referenced document** from your actual request — a classic prompt-injection-adjacent confusion.
+回答关于某份本地文档的问题之前，它会打开对应文件。文档里写的指令与你的实际请求会分开处理。
 
-### Text before OCR
+## 先找文本，再 OCR
 
-When you hand it an image of a slide or a scanned page, it first looks for an existing text extraction in the same folder (PDF text, OCR output, TXT, Markdown, HTML). Repeated lossy OCR of something already extracted locally is a waste.
+收到课件截图或扫描页时，它先在同一个文件夹里查找已有的文本提取，包括 PDF 文本、OCR 结果、TXT、Markdown 和 HTML。已经提取过的内容直接使用，OCR 只用于缺失或依赖版面的部分。
 
-### How it teaches
+## 讲解方式
 
-Answer your exact question first, then explain the reasoning. One concept at a time — no dumping a chapter because you asked about one formula.
-
-```
-what the term or question means
-→ why it matters or why it exists
-→ how the mechanism works, step by step
-→ how it appears in an example, formula, diagram, experiment, or code
-→ how it differs from nearby concepts
-→ what an exam or assignment expects
-```
-
-Representation follows the subject: tables for comparisons, diagrams for processes, formulas with variable meanings and dimensional checks for math and engineering, complete runnable code for CS, reproducible commands when verification is practical, flashcards for definitions.
-
-For anything with steps — code, algorithms, proofs, derivations — the sequence is made explicit, with state, assumptions, inputs, outputs and branch conditions tracked. For programming questions it says *which* process, thread, function or object executes each important line.
-
-### Confusable pairs
-
-It deliberately separates things students mix up: definition vs example, necessary vs sufficient, correlation vs causation, model vs implementation, theorem vs heuristic, memorized formula vs derivation, concurrency vs parallelism, syntax vs runtime error, assumption vs conclusion vs exception.
-
-If you challenge an earlier conclusion, it re-checks the source and states the correction. It does not defend an answer just because it gave it earlier.
-
-### Verification loop
-
-When a question is experimentally checkable:
+先回答当前问题，再展开推理。一次处理一个概念，只引入理解该问题所需的周边概念。
 
 ```
-predict the result
-→ run or trace a minimal example
-→ compare with the observation
-→ identify the discrepancy
-→ correct the explanation
+问题或术语的含义
+→ 为什么存在、为什么重要
+→ 机制或推理过程
+→ 在例题、公式、图、实验或代码中的样子
+→ 与相邻概念的区别
+→ 考试或作业的答法
 ```
 
-It also states the limits of the observation: one implementation may differ from the course abstraction, and one experiment doesn't prove a general rule.
+表现形式按学科选择：对比用表格，流程用图和时序，数学与工程给公式并标注变量含义和量纲检查，编程给可运行的完整代码，可验证的结论给复现命令，定义类给检索式问题。
 
-### Exam-oriented output
+有步骤的内容（代码、算法、证明、推导）写明执行顺序，并跟踪状态、假设、输入、输出和分支条件。编程题会指出哪个进程、线程、函数或对象执行每一行关键代码。
 
-Every concept answer ends with a concise exam-ready formulation. Comparison questions get a compact table; analysis questions get assumptions, intermediate steps, conclusion; code questions get execution paths and output counts; calculations get units and a sanity check.
+## 容易混淆的概念
 
-It won't hand you an answer key before you've had a chance to attempt the exercise, unless you ask for it. Practice questions are **original**, written to your course level — it won't claim to reproduce a textbook question it hasn't been given.
+skill 会分别说明这些成对概念：定义与例子、必要与充分、相关与因果、模型与实现、定理与启发式、背公式与推导、并发与并行、语法错误与运行时错误、假设与结论与例外。
 
-Topics are classified as *must know now*, *understand the idea for now*, or *postpone the advanced details*, anchored on the course's prerequisites and assessment requirements.
+你质疑之前的结论时，它重新核对源码、代码、计算或前提，并说明更正内容。
 
-### Five-question accumulation
+## 验证
 
-This is the distinctive part. It tracks the **distinct primary questions** in the current subject. Follow-ups, re-explanations, code-line clarifications and near-duplicates don't count. When the count reaches five, it automatically writes a knowledge-accumulation Markdown document — the five questions, concise explanations, key distinctions, examples, common mistakes, exam formulations — into the right subject/topic folder, then resets the batch.
+可以实验验证的问题，按下面的顺序处理：
 
-Counting is semantic, not message-based. Switching subjects keeps separate counts and separate documents.
+```
+预测结果
+→ 运行或跟踪一个最小例子
+→ 与观察对照
+→ 找出差异
+→ 修正解释
+```
 
-### Notes
+它同时说明观察的边界：具体实现可能与课程抽象不同，一次实验不能证明一般规律。
 
-Consolidated notes follow a seven-part shape: plain-language concept, why it exists, mechanism or derivation, examples and diagrams, common mistakes and boundary conditions, exam-ready formulation, self-check exercises.
+## 面向考试的输出
 
-Default output is a student-facing Markdown document in the existing workspace hierarchy. It inspects a folder before writing into it, follows the project's existing convention, and never dumps generated files in the workspace root. Existing materials are left intact — files are moved only when you explicitly ask.
+概念题在解释之后给出一段可以直接写在卷子上的简洁表述。对比题用紧凑表格；分析题给出假设、中间步骤和结论；代码题给出执行路径和输出计数；计算题带单位和合理性检查。
 
-## Requirements
+练习题在你尝试之前不显示答案，除非你明确要求。题目按你的课程水平原创；没有拿到原题时，不会声称某题出自某本教材。
 
-None beyond an agent that supports the skill format. Single file, no scripts, no dependencies.
+知识点分为三类：现在必须会、先理解思路、暂时可以放。分类依据课程的先修要求和考核要求。
 
-## Install
+## 每 N 题积累
+
+skill 跟踪当前科目里的不同主要问题。追问、换种说法再解释、某行代码的澄清、答案结构几乎相同的重复问题，都不计入新问题。
+
+累计到 N 个问题后，它在对应的科目或主题文件夹里生成一份知识积累文档，内容包括这 N 个问题、简明解释、关键区分、例子、常见错误和考试表述，然后重置计数。
+
+N 默认是 5，可以修改。优先级从高到低：
+
+1. 对话中的直接说明，例如「每 3 题总结一次」。
+2. 工作区根目录 `.study-coach.json` 里的 `accumulate_every` 字段，取正整数。
+3. 默认值 5。
+
+中途修改 N 时，当前批次已累计的问题保留，从那一刻起按新阈值触发。第一次开始计数时，它会说明当前生效的 N。
+
+计数按语义判断，不按消息条数。切换科目时分开计数、分开存档。
+
+```json
+{ "accumulate_every": 3 }
+```
+
+## 笔记
+
+整理出的笔记按七段结构组织：白话概念、为什么有它、机制或推导、例子和图、常见错误和边界条件、考试表述、自测题。
+
+默认产出是放在现有工作区层级里的 Markdown 文档。写入某个文件夹之前会先查看目录结构，并沿用既有惯例。已有材料保持原样，只有你明确要求整理时才移动文件。
+
+## 依赖
+
+无。单文件 skill，不含脚本。
+
+## 安装
 
 ```bash
 git clone https://github.com/jeremylinnnnn/personal-study-coach.git \
   ~/.workbuddy-ai/skills/personal-study-coach
 ```
 
-For Claude Code, clone into `~/.claude/skills/personal-study-coach` instead.
+Claude Code 的安装路径是 `~/.claude/skills/personal-study-coach`。
 
-## Layout
+## 目录结构
 
 ```
-SKILL.md   the entire skill
+SKILL.md   全部内容
 ```
 
-## Language
+## 语言
 
-The skill instructs the assistant to explain in plain Chinese unless you ask for another language. The methodology itself is language-agnostic — edit that one line if you want a different default.
+skill 默认用中文讲解，可以改成其他语言。方法论部分与语言无关。
 
-## License
+## 许可
 
-MIT — see [LICENSE](LICENSE).
+MIT，见 [LICENSE](LICENSE)。
