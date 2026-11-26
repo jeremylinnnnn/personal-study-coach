@@ -1,6 +1,6 @@
 ---
 name: personal-study-coach
-description: Help university students learn from local course materials, make annotated study guides, practice with exercises, and consolidate knowledge. Use for exam preparation, spaced review with HTML knowledge cards, or a shared review schedule across subjects.
+description: Help university students learn from local course materials, make annotated study guides, practice with exercises, and consolidate knowledge. Use for exam preparation, including last-minute study, topic walkthroughs, past-paper analysis, spaced review with HTML knowledge cards, and a shared review schedule across subjects.
 ---
 
 # Personal self-study workflow
@@ -12,7 +12,7 @@ Apply this skill to university-level self-study, especially when the user provid
 首次使用时，用几条短句介绍平时学习和备考功能，提醒用户尽量把教材、课件、作业、测试题和历年试卷放进当前学习工作区，并给出一个可照着说的例子。资料先提供手头已有的即可，也可以直接指定可访问的文件路径。用户已说明任务时，介绍后直接处理。用户想浏览功能或还没选成果时，展示相应选项。
 
 > - **平时学习**：我可以讲概念、做课件精讲讲义、出题或批改，并自动积累不同的问题。
-> - **备考**：我可以做 HTML 知识卡，按考试日期和可用时间安排各科复习。
+> - **备考**：我可以从头讲考点、做知识串讲、用练习和历年卷研判重点，也可以带你刷题、做知识卡或排复习时间。
 > - **准备资料**：尽量把教材、课件、测试题和历年试卷放进你的学习工作区，方便我查阅和引用。
 > - **试一下**：选择「课件精讲与自学讲义」，再点选要学的章节。也可以简短回复「选 2，当前章节」。
 > - **积累频率**：默认每 5 个不同问题整理一次。可以选每 3 次、每 5 次、每 10 次，或自定次数。
@@ -23,7 +23,7 @@ Apply this skill to university-level self-study, especially when the user provid
 
 默认使用**平时学习模式**。从用户当前的概念、课件、教材、作业或实验出发，按下文的资料优先级讲解、举例、验证和整理笔记。用户提出考试、考前复习、跨科复习表或集中复习卡片时，使用**备考模式**。单个题目的答疑仍直接解答。
 
-备考时先复用已知信息，再询问考试科目与日期、每日可用时长或具体时段，以及需避开的其他科目和固定安排。所有科目使用同一张复习总表。结合考试范围、已确认短板和卡片到期日安排复习。用脚本按共同的可用时间排表，超出时间的任务单独列出。读 `references/exam-mode.md`，其中有工作区结构、排表脚本和 HTML 知识卡的操作方式。
+备考时先读 `references/exam-mode.md`，复用已知的考试范围、学习进度与可用时间。用户只说「备考」「考前复习」或没选成果时，先给下方菜单。用户已经说清想做什么时直接按对应方式开始。只补问影响当前成果的缺项。考试日期、各科可用时段和固定占用等完整信息只在跨科排表时收集。
 
 ### 平时学习的成果菜单
 
@@ -38,6 +38,17 @@ Apply this skill to university-level self-study, especially when the user provid
 
 可以这样选：「选 1 和 4，范围是波函数归一化。」用户直接指定一项成果时采用对应流程。菜单允许用户用自然语言提出其他需求。
 
+### 备考的成果菜单
+
+1. **考前突击** — 适合基础薄弱或时间紧。从高优先级考点所需的基础开始讲，配典型例题和变式自测。
+2. **知识串讲** — 按考试范围和先修关系连起知识点，分步解释定义、推导、适用条件和典型考法。
+3. **考点研判** — 根据考试范围、作业、测验和历年卷整理高优先级知识点与题型，注明出处和判断依据。
+4. **刷题与模拟** — 按考点或题型选已有题目或出变式题，作答后批改并安排重练。
+5. **HTML 知识卡** — 对已学过的具体知识点批量制卡，用四档反馈安排复习。
+6. **跨科复习总表** — 按考试日期和可用时段，把所选的讲解、练习和复习任务排进一张共用表。
+
+可组合选择，例如「1 和 3，只剩两小时，前半部分没学过」。基础薄弱且时间紧时建议「1」，有练习或试卷时可搭配「3」。已学过但串不起来时建议「2」，想巩固已学知识时再推荐「5」。制卡和更新总表分别按用户选择执行。
+
 ### 用选项收集偏好
 
 能从已选文件、课件目录、当前章节或已保存偏好确定的信息先复用。需要用户决定时，给简短、可直接选择的选项，并标出合适的默认项。能点选时提供按钮，否则用编号，支持「2」「1 和 4」这样的短回复。可按实际材料列出课程、已有课件、章节、页码范围、讲义版式和练习难度。只询问会改变当前成果的选择，明确需求或已有偏好时直接处理。考试日期、自定义页码等确实需要文字的信息，用一个短输入收集。
@@ -46,7 +57,7 @@ Apply this skill to university-level self-study, especially when the user provid
 
 - 全局复习总表绝对路径：尚未登记
 
-进入备考模式时先读取这一项。有有效路径就打开并更新该总表，新增科目、开始新聊天或切换模型时也沿用。尚未登记时，先在已知学习工作区寻找并复用原表。首次创建或找回原表后，将核实过的绝对路径写回此处。已登记的路径找不到时，先核对表是否移动或改名，找到后更新登记。路径失效不能作为创建第二张总表的依据。升级 Skill 时保留已登记的路径。
+用户查看或安排跨科复习总表时，先读取这一项。有有效路径就打开原表，按请求更新。尚未登记时，先在已知学习工作区寻找并复用原表。首次创建或找回原表后，将核实过的绝对路径写回此处。已登记的路径找不到时，先核对表是否移动或改名，找到后更新登记。路径失效不能作为创建第二张总表的依据。升级 Skill 时保留已登记的路径。
 
 ## Source priority
 
