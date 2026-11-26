@@ -1,0 +1,33 @@
+{
+  "name": "personal-study-coach",
+  "version": "2.1.1",
+  "description": "用本地课程资料自学，准备考试并安排知识卡复习。",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeremylinnnnn/personal-study-coach.git"
+  },
+  "engines": {
+    "dsh": "^0.2.2-rc.5"
+  },
+  "exports": {
+    ".": "./dsh/index.js",
+    "./locale/*.json": "./dsh/locale/*.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "SKILL.md",
+    "THIRD_PARTY_NOTICES.md",
+    "assets/",
+    "references/",
+    "scripts/",
+    "dsh/"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./dsh/cordis.patch.yml"
+    }
+  }
+}

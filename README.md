@@ -14,11 +14,23 @@
 - **考前突击与知识串讲**适合部分内容还没学或学得零散的情况。按现有基础补先修知识，讲清推导、适用条件和典型题，再做一道变式自测。
 - **考点研判**根据考试范围、练习和历年卷列出优先学什么、常怎么考。结论标明出处，并区分明确考纲和样本推断。
 - **HTML 知识卡**一次备好整组具体知识点。按回忆难度选「重来、困难、良好、简单」，按钮上方会显示预计复习间隔，无需估算掌握百分比。带作答和批改的练习可通过「练习与自测」单独做。
-- **全局复习总表**会记录在已安装的 `SKILL.md` 中。新增科目、修改考试日期或者换会话时，沿用这张表。
+- **全局复习总表**会登记在本机。新增科目、修改考试日期或者换会话时，沿用这张表。
 
 ## 安装
 
-先装好 Git 和你使用的 Agent。以下命令把 Skill 安装到当前用户目录，安装后可在不同学习工作区使用。
+准备好你使用的 Agent。可以从 DSH 插件页直接安装，也可以把整个技能目录放到当前用户的技能目录。下面的命令示例使用 Git。
+
+### DeepSeek Harness 插件页
+
+使用 DSH 0.2.2-rc.5 或兼容的 0.2.x 版本，打开「插件 → 添加插件」，选择 Git 仓库并粘贴：
+
+```text
+https://github.com/jeremylinnnnn/personal-study-coach
+```
+
+安装并启用后，在对话输入 `/personal-study-coach`。手工安装在 `.dsh/skills` 或 `.agents/skills` 的同名 Skill 优先。插件安装的复习总表路径登记在用户目录的 `.personal-study-coach/review-plan-location.txt`，升级插件时会保留。还可使用下方的目录安装。参见 [DSH 插件安装说明](https://github.com/deepseek-ai/deepseek-harness/tree/master/packages/client/ui-plugin-manager#installing-a-bundle)。
+
+### 用户级技能目录
 
 | 工具 | macOS 安装位置 | Windows 安装位置 |
 | --- | --- | --- |
