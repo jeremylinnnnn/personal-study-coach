@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>个人自学教练 · 知识复习</title>
+<style>
+:root{color-scheme:light dark;--bg:#f4f5f7;--surface:#fff;--fg:#1c2535;--muted:#667084;--line:#dce1e8;--accent:#3159ca;--tint:#eef2ff;--error:#a52828}
+@media(prefers-color-scheme:dark){:root{--bg:#15171c;--surface:#20242c;--fg:#f0f2f7;--muted:#b0b8c9;--line:#3c4350;--accent:#b0c1ff;--tint:#292f48;--error:#ffb7b7}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif}
+main{max-width:800px;margin:0 auto;padding:40px 28px}header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:40px}.brand{font-weight:600}.subtle{color:var(--muted);font-size:14px}#progress{font-variant-numeric:tabular-nums;white-space:nowrap}.track{height:4px;background:var(--line);border-radius:3px;overflow:hidden;margin-bottom:28px}#fill{height:100%;background:var(--accent)}
+article{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:32px}.eyebrow{color:var(--muted);font-size:13px;margin-bottom:12px}h1{font-size:25px;line-height:1.45;margin:0 0 24px;font-weight:600}#content{font-size:19px;line-height:1.95;white-space:pre-line}#source{display:inline-block;margin-top:24px;color:var(--muted);font-size:13px;text-underline-offset:3px}
+#choices{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:24px}button{font:inherit;cursor:pointer;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:15px 8px}button:hover{background:var(--tint)}button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}button:disabled{cursor:wait;opacity:.5}.key{display:block;font-size:12px;color:var(--muted);margin-top:3px}footer{display:flex;justify-content:space-between;gap:16px;margin-top:20px;font-size:13px;color:var(--muted)}#error{margin-top:18px;color:var(--error)}#error button{display:block;margin-top:12px}#summary{margin-top:24px}.row{padding:16px 0;border-bottom:1px solid var(--line)}.row:last-child{border:0}.row-title{margin-bottom:5px}.row-meta{font-size:14px;color:var(--muted)}[hidden]{display:none!important}
+@media(max-width:550px){main{padding:24px 16px}header{margin-bottom:26px}article{padding:24px 20px}h1{font-size:22px}#content{font-size:17px}#choices{grid-template-columns:repeat(2,1fr)}footer{flex-direction:column;gap:4px}.subtle{font-size:12px}}
+.rating-label{font-weight:600}.interval,.rating-hint{display:block;color:var(--muted);font-size:13px}.interval{margin-bottom:6px;font-variant-numeric:tabular-nums}.rating-hint{margin-top:3px}#rating-controls{margin-top:20px}#rating-controls p{margin:0}#choices{margin-top:10px}#settings{margin-top:20px}#settings summary{cursor:pointer}#settings label{margin-right:8px}
+</style>
+<main>
+  <header><div class="brand">个人自学教练 <span class="subtle">/ 知识复习</span></div><div id="progress">载入中</div></header>
+  <div class="track" aria-hidden="true"><div id="fill"></div></div>
+  <article aria-live="polite">
+    <div class="eyebrow" id="eyebrow">正在读取已准备的卡片</div>
+    <h1 id="title">知识复习</h1>
+    <div id="content"></div>
+    <a id="source" target="_blank" rel="noopener noreferrer" hidden>资料依据 ↗</a>
+    <div id="summary" hidden></div>
+  </article>
+  <div id="rating-controls" hidden>
+    <p class="subtle" id="rating-guide">按这次回忆的难易选择。按钮上方显示预计下次复习间隔。</p>
+    <div id="choices" role="group" aria-label="回忆反馈" aria-describedby="rating-guide">
+      <button type="button" data-rating="1"><span class="interval"></span><span class="rating-label">重来</span><span class="rating-hint">没想起来</span><span class="key" aria-hidden="true">1</span></button>
+      <button type="button" data-rating="2"><span class="interval"></span><span class="rating-label">困难</span><span class="rating-hint">费力才想起</span><span class="key" aria-hidden="true">2</span></button>
+      <button type="button" data-rating="3"><span class="interval"></span><span class="rating-label">良好</span><span class="rating-hint">顺利想起</span><span class="key" aria-hidden="true">3</span></button>
+      <button type="button" data-rating="4"><span class="interval"></span><span class="rating-label">简单</span><span class="rating-hint">马上想起</span><span class="key" aria-hidden="true">4</span></button>
+    </div>
+  </div>
+  <button id="repeat" type="button" hidden>再复习本组</button>
+  <div id="error" role="alert" hidden><span id="error-text"></span><button id="retry" type="button">重试保存</button></div>
+  <footer><span id="status" role="status">正在读取本组</span><span>支持数字键 1—4</span></footer>
+  <details id="settings">
+    <summary>复习设置</summary>
+    <label class="subtle" for="retention">复习节奏</label>
+    <select id="retention" disabled>
+      <option value="90">日常复习</option>
+      <option value="95">加强复习</option>
+    </select>
+  </details>
+  <button id="export" type="button" style="margin-top:20px">导出复习记录</button>
+</main>
+<script id="review-boot" type="application/json">__REVIEW_BOOT__</script>
+<script>
+(() => {
+  const token='__REVIEW_TOKEN__';
+  const boot=JSON.parse(document.getElementById('review-boot').textContent);
+  const offline=boot.mode==='offline';
+  const storageKey='study-coach-review-state:'+boot.workspace_id;
+  const $=id=>document.getElementById(id);
+  const ratingButtons=[...document.querySelectorAll('[data-rating]')];
+  const labels=Object.fromEntries(ratingButtons.map(button=>[button.dataset.rating,button.querySelector('.rating-label').textContent]));
+  let state=null, pending=null, busy=false;
+  const clone=value=>JSON.parse(JSON.stringify(value));
+  const W=[.212,1.2931,2.3065,8.2956,6.4133,.8334,3.0194,.001,1.8722,.1666,.796,1.4835,.0614,.2629,1.6483,.6014,1.8729,.5425,.0912,.0658,.1542];
+  const clampD=value=>Math.max(1,Math.min(10,value));
+  const initialD=grade=>W[4]-Math.exp(W[5]*(grade-1))+1;
+  const roundEven=value=>{const floor=Math.floor(value),part=value-floor;return part===.5?(floor%2===0?floor:floor+1):Math.round(value)};
+  function today(){const parts=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:boot.timezone||undefined,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).map(x=>[x.type,x.value]));return parts.year+'-'+parts.month+'-'+parts.day}
+  function predictSchedule(card,grade,date,retentionPercent){
+    let S=card.stability,D=card.difficulty;
+    const elapsed=card.last_review?(Date.parse(date+'T00:00:00Z')-Date.parse(card.last_review+'T00:00:00Z'))/86400000:null;
+    if(elapsed!==null&&elapsed<0)throw new Error('当前日期早于已有复习，请核对系统日期');
+    if(card.state!=='review'||S===null||!card.last_review){S=Math.max(.001,W[grade-1]);D=clampD(initialD(grade))}
+    else{
+      const oldS=S,oldD=D;
+      if(elapsed<=0){let increase=Math.exp(W[17]*(grade-3+W[18]))*Math.pow(S,-W[19]);if(grade>=2)increase=Math.max(1,increase);S*=increase}
+      else{
+        const decay=-W[20],factor=Math.pow(.9,1/decay)-1,R=Math.pow(1+factor*elapsed/S,decay);
+        if(grade===1)S=Math.min(W[11]*Math.pow(D,-W[12])*(Math.pow(S+1,W[13])-1)*Math.exp((1-R)*W[14]),S/Math.exp(W[17]*W[18]));
+        else S=S*(1+Math.exp(W[8])*(11-D)*Math.pow(S,-W[9])*(Math.exp((1-R)*W[10])-1)*(grade===2?W[15]:1)*(grade===4?W[16]:1));
+      }
+      S=Math.max(.001,S);D=clampD(W[7]*initialD(4)+(1-W[7])*(oldD+(10-oldD)*(-W[6]*(grade-3))/9));
+    }
+    const decay=-W[20];
+    const factor=Math.pow(.9,1/decay)-1;
+    const interval=Math.max(1,Math.min(365,roundEven((S/factor)*(Math.pow(retentionPercent/100,1/decay)-1))));
+    return {
+      interval,
+      stability:roundEven(S*10000)/10000,
+      difficulty:roundEven(D*10000)/10000,
+      due:new Date(Date.parse(date+'T00:00:00Z')+interval*86400000).toISOString().slice(0,10),
+    };
+  }
+  function scheduleOffline(card,grade,date,retentionPercent){
+    const {stability,difficulty,due}=predictSchedule(card,grade,date,retentionPercent);
+    Object.assign(card,{state:'review',stability,difficulty,due,last_review:date});
+    card.reps=(card.reps||0)+1;card.lapses=(card.lapses||0)+(grade===1?1:0);
+    card.history=Array.isArray(card.history)?card.history:[];
+    const event={date,rating:grade,origin:'standalone_html'};
+    if(retentionPercent!==90)event.retention_percent=retentionPercent;
+    card.history.push(event);
+    return card.due;
+  }
+  function persist(){localStorage.setItem(storageKey,JSON.stringify(state))}
+  function key(){return 'study-coach-recall-pending:'+state.batch_id}
+  function remember(value){try{if(value)localStorage.setItem(key(),JSON.stringify(value));else localStorage.removeItem(key())}catch(_){}}
+  function showStatus(text){$('status').textContent=text}
+  function render(){
+    if(!state)return;
+    const n=state.cards.length,i=state.completed,done=i>=n;
+    $('retention').value=String(state.retention_percent??90);
+    $('retention').disabled=busy||Boolean(pending);
+    $('progress').textContent=done?n+' / '+n+' · 已完成':(i+1)+' / '+n;
+    $('fill').style.width=(i/n*100)+'%';
+    $('rating-controls').hidden=done;
+    $('summary').hidden=!done;
+    $('repeat').hidden=!done;
+    $('repeat').disabled=busy;
+    $('source').hidden=true;
+    if(done){
+      $('eyebrow').textContent='本组结束';$('title').textContent='本组已完成';
+      $('content').textContent=busy?'正在保存最后一条反馈。':'复习反馈和下次日期已保存。';
+      $('summary').replaceChildren();
+      state.cards.forEach(c=>{
+        const r=state.ratings.find(x=>x.card_id===c.id);if(!r)return;
+        const row=document.createElement('div');row.className='row';
+        const title=document.createElement('div');title.className='row-title';title.textContent=c.title;
+        const meta=document.createElement('div');meta.className='row-meta';meta.textContent=labels[r.rating]+' · 下次 '+r.due;
+        row.append(title,meta);$('summary').append(row);
+      });
+    }else{
+      const c=state.cards[i];$('eyebrow').textContent='知识卡 · 本组 '+n+' 张已准备';$('title').textContent=c.title;$('content').textContent=c.content;
+      const match=c.source&&c.source.match(/https?:\/\/[^；\s（）]+/);
+      if(match){$('source').href=match[0];$('source').hidden=false}
+      const card=state.scheduling[c.id],date=today(),retention=state.retention_percent??90;
+      ratingButtons.forEach(button=>{
+        const prediction=card&&(!card.last_review||card.last_review<=date)
+          ?predictSchedule(card,Number(button.dataset.rating),date,retention):null;
+        button.querySelector('.interval').textContent=prediction?prediction.interval+' 天后':'—';
+      });
+    }
+    ratingButtons.forEach(button=>button.disabled=busy||Boolean(pending));
+  }
+  async function load(){
+    if(offline){
+      let saved=null;try{saved=JSON.parse(localStorage.getItem(storageKey)||'null')}catch(_){}
+      state=saved&&saved.version===1&&Array.isArray(saved.cards)?saved:clone(boot.initial_state);render();return state;
+    }
+    const response=await fetch('/api/state',{cache:'no-store'});const body=await response.json();
+    if(!response.ok)throw new Error(body.error||'读取失败');state=body;render();return body;
+  }
+  async function save(){
+    if(!pending||busy)return;
+    busy=true;$('error').hidden=true;showStatus('正在自动保存…');
+    const before=clone(state);
+    // 直接从已经预载的整组里切下一张，等待的只是后台写盘，无模型调用。
+    const current=state.cards[state.completed];
+    if(current&&current.id===pending.card_id){state.completed++;render()}
+    try{
+      if(offline){
+        const recorded=state.ratings.find(x=>x.card_id===pending.card_id);
+        if(recorded){
+          if(recorded.rating!==pending.rating)throw new Error('此卡已记录另一反馈，请先核对导出记录');
+          remember(null);pending=null;busy=false;render();showStatus('已保存到本浏览器');return;
+        }
+        const due=scheduleOffline(state.scheduling[pending.card_id],pending.rating,today(),state.retention_percent??90);
+        state.ratings.push({card_id:pending.card_id,rating:pending.rating,due});persist();
+        remember(null);pending=null;busy=false;render();showStatus('已保存到本浏览器');return;
+      }
+      const response=await fetch('/api/rate',{method:'POST',headers:{'Content-Type':'application/json','X-Review-Session':token},body:JSON.stringify(pending)});
+      const body=await response.json();if(!response.ok)throw new Error(body.error||'保存未确认');
+      state=body.state;remember(null);pending=null;busy=false;render();showStatus('已自动保存');
+    }catch(error){
+      busy=false;if(offline)state=before;else{try{await load()}catch(_){}}render();
+      $('error-text').textContent='保存未确认：'+error.message;$('error').hidden=false;showStatus('反馈待保存，请重试');
+    }
+  }
+  function rate(value){
+    if(!state||busy||pending||state.completed>=state.cards.length)return;
+    pending={batch_id:state.batch_id,card_id:state.cards[state.completed].id,rating:value};remember(pending);void save();
+  }
+  ratingButtons.forEach(button=>button.addEventListener('click',()=>rate(Number(button.dataset.rating))));
+  $('retry').addEventListener('click',()=>void save());
+  $('retention').addEventListener('change',async event=>{
+    if(!state||busy||pending)return;
+    const percent=Number(event.target.value);
+    const previous=state.retention_percent;
+    busy=true;
+    render();
+    try{
+      if(offline){
+        state.retention_percent=percent;
+        persist();
+      }else{
+        const response=await fetch('/api/retention',{
+          method:'POST',headers:{'Content-Type':'application/json','X-Review-Session':token},
+          body:JSON.stringify({retention_percent:percent}),
+        });
+        const body=await response.json();
+        if(!response.ok)throw new Error(body.error||'设置未保存');
+        state=body.state;
+      }
+      showStatus('已切换复习节奏，从下一次评分生效');
+    }catch(error){
+      state.retention_percent=previous;
+      showStatus('设置未确认：'+error.message);
+    }finally{
+      busy=false;
+      render();
+    }
+  });
+  $('repeat').addEventListener('click',async()=>{
+    if(busy||pending)return;busy=true;render();showStatus('正在准备本组…');
+    try{
+      if(offline){
+        state.session_history=state.session_history||[];state.session_history.push({batch_id:state.batch_id,ratings:clone(state.ratings)});
+        state.batch_id='B-local-'+Date.now();state.completed=0;state.ratings=[];persist();busy=false;render();showStatus('整组已载入 · 已保存到本浏览器');return;
+      }
+      const response=await fetch('/api/repeat',{method:'POST',headers:{'Content-Type':'application/json','X-Review-Session':token},body:'{}'});
+      const body=await response.json();if(!response.ok)throw new Error(body.error||'准备失败');
+      state=body.state;busy=false;render();showStatus('整组已载入 · 点击即可切换');
+    }catch(error){busy=false;render();showStatus(error.message)}
+  });
+  $('export').addEventListener('click',()=>{
+    if(!state)return;
+    const data={format:'study-coach-recall-export-v1',exported_at:new Date().toISOString(),state};
+    const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+    const a=document.createElement('a');a.href=url;a.download='个人自学教练-复习记录-'+today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  });
+  document.addEventListener('keydown',event=>{
+    if(event.target===$('retention'))return;
+    if(!event.repeat&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&/^[1-4]$/.test(event.key)){
+      event.preventDefault();
+      rate(Number(event.key));
+    }
+  });
+  window.addEventListener('focus',()=>{if(!busy&&!pending)load().then(()=>showStatus('已自动保存')).catch(()=>{})});
+  load().then(()=>{showStatus(offline?'整组已载入 · 进度保存在本浏览器':'本组已准备 · 自动保存');try{pending=JSON.parse(localStorage.getItem(key())||'null')}catch(_){}if(pending)void save()}).catch(error=>{$('title').textContent='暂时无法读取卡片';$('content').textContent=error.message;showStatus('请检查复习服务')});
+})();
+</script>
+</html>

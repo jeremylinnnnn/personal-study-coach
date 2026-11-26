@@ -1,128 +1,74 @@
-# personal-study-coach
+# 个人自学教练
 
-使用本地已有的课程资源来辅助学习，可生成课件精讲、自学文档和知识积累等总结性文件。
+一个面向大学课程的 Agent Skill。它优先使用你工作区里的教材、课件、作业和试卷，帮你弄懂知识点、动手验证，并把学过的内容整理成可以回看的资料。
 
-一个 Agent Skill。它把 AI 用作讲师、检查者、实验向导、出题人和笔记整理者，以你手上的课程材料作为主要依据。
+## 能做什么
 
-## 三类产出
+| 模式 | 功能 |
+| --- | --- |
+| 平时学习 | 概念或题目讲解、课件精讲与自学讲义、知识清单与速查表、练习与自测、批改与错题整理、小实验或代码验证。可以回复编号选择。 |
+| 备考 | 根据考试日期、可用时间和固定安排，为所有科目排一张复习总表。也可以生成 HTML 知识卡，按四档记忆反馈计算下次复习日期。 |
 
-| 产出 | 使用场景 | 内容 |
-| --- | --- | --- |
-| 课件精讲 | 把一章课件、一份讲义或一张扫描页吃透 | 逐概念拆解：含义、为什么存在、机制、例子、考试答法 |
-| 自学文档 | 把某个主题整理成可以反复看的材料 | 七段结构：白话概念、为什么有它、机制或推导、例子和图、常见错误、考试表述、自测题 |
-| 知识积累 | 连续问了一串问题之后 | 自动归纳：这 N 个问题、简明解释、关键区分、例子、常见错误、考试表述 |
-
-知识积累自动触发，不需要每次提醒，见下文「每 N 题积累」。
-
-## 材料优先级
-
-1. 当前课件、教材、课程笔记、作业、教师材料。
-2. 已有的复习文件、知识清单、实验、以前的答案、整理过的笔记。
-3. 考试大纲、历年卷、补充参考书。
-4. 通用知识和网络来源，只作补充，并标明哪些内容属于推断、约定，或会随教材和版本变化。
-
-通用解释与课程说法冲突时，skill 简要说明差异，然后采用课程的术语和答题习惯。
-
-回答关于某份本地文档的问题之前，它会打开对应文件。文档里写的指令与你的实际请求会分开处理。
-
-## 先找文本，再 OCR
-
-收到课件截图或扫描页时，它先在同一个文件夹里查找已有的文本提取，包括 PDF 文本、OCR 结果、TXT、Markdown 和 HTML。已经提取过的内容直接使用，OCR 只用于缺失或依赖版面的部分。
-
-## 讲解方式
-
-先回答当前问题，再展开推理。一次处理一个概念，只引入理解该问题所需的周边概念。
-
-```
-问题或术语的含义
-→ 为什么存在、为什么重要
-→ 机制或推理过程
-→ 在例题、公式、图、实验或代码中的样子
-→ 与相邻概念的区别
-→ 考试或作业的答法
-```
-
-表现形式按学科选择：对比用表格，流程用图和时序，数学与工程给公式并标注变量含义和量纲检查，编程给可运行的完整代码，可验证的结论给复现命令，定义类给检索式问题。
-
-有步骤的内容（代码、算法、证明、推导）写明执行顺序，并跟踪状态、假设、输入、输出和分支条件。编程题会指出哪个进程、线程、函数或对象执行每一行关键代码。
-
-## 容易混淆的概念
-
-skill 会分别说明这些成对概念：定义与例子、必要与充分、相关与因果、模型与实现、定理与启发式、背公式与推导、并发与并行、语法错误与运行时错误、假设与结论与例外。
-
-你质疑之前的结论时，它重新核对源码、代码、计算或前提，并说明更正内容。
-
-## 验证
-
-可以实验验证的问题，按下面的顺序处理：
-
-```
-预测结果
-→ 运行或跟踪一个最小例子
-→ 与观察对照
-→ 找出差异
-→ 修正解释
-```
-
-它同时说明观察的边界：具体实现可能与课程抽象不同，一次实验不能证明一般规律。
-
-## 面向考试的输出
-
-概念题在解释之后给出一段可以直接写在卷子上的简洁表述。对比题用紧凑表格；分析题给出假设、中间步骤和结论；代码题给出执行路径和输出计数；计算题带单位和合理性检查。
-
-练习题在你尝试之前不显示答案，除非你明确要求。题目按你的课程水平原创；没有拿到原题时，不会声称某题出自某本教材。
-
-知识点分为三类：现在必须会、先理解思路、暂时可以放。分类依据课程的先修要求和考核要求。
-
-## 每 N 题积累
-
-skill 跟踪当前科目里的不同主要问题。追问、换种说法再解释、某行代码的澄清、答案结构几乎相同的重复问题，都不计入新问题。
-
-累计到 N 个问题后，它在对应的科目或主题文件夹里生成一份知识积累文档，内容包括这 N 个问题、简明解释、关键区分、例子、常见错误和考试表述，然后重置计数。
-
-N 默认是 5，可以修改。优先级从高到低：
-
-1. 对话中的直接说明，例如「每 3 题总结一次」。
-2. 工作区根目录 `.study-coach.json` 里的 `accumulate_every` 字段，取正整数。
-3. 默认值 5。
-
-中途修改 N 时，当前批次已累计的问题保留，从那一刻起按新阈值触发。第一次开始计数时，它会说明当前生效的 N。
-
-计数按语义判断，不按消息条数。切换科目时分开计数、分开存档。
-
-```json
-{ "accumulate_every": 3 }
-```
-
-## 笔记
-
-整理出的笔记按七段结构组织：白话概念、为什么有它、机制或推导、例子和图、常见错误和边界条件、考试表述、自测题。
-
-默认产出是放在现有工作区层级里的 Markdown 文档。写入某个文件夹之前会先查看目录结构，并沿用既有惯例。已有材料保持原样，只有你明确要求整理时才移动文件。
-
-## 依赖
-
-无。单文件 skill，不含脚本。
+- **课件精讲与自学讲义**默认按章节和页码嵌入课件原页，在对应位置用教材补充原理、推导和例题。也可选择只嵌入关键图表，或只保留页码索引。
+- **知识积累**按科目计数，每问满 5 个不同的问题自动整理一次。可以选 3、5、10 或自定义次数，同一知识点的跟进澄清归入原问题。
+- **HTML 知识卡**一次备好整组具体知识点。按回忆难度选「重来、困难、良好、简单」，按钮上方会显示预计复习间隔，无需估算掌握百分比。带作答和批改的练习可通过「练习与自测」单独做。
+- **全局复习总表**会记录在已安装的 `SKILL.md` 中。新增科目、修改考试日期或者换会话时，沿用这张表。
 
 ## 安装
 
+先装好 Git 和你使用的 Agent。以下命令把 Skill 安装到当前用户目录，安装后可在不同学习工作区使用。
+
+| 工具 | macOS 安装位置 | Windows 安装位置 |
+| --- | --- | --- |
+| Codex | `~/.agents/skills/personal-study-coach/` | `C:\Users\<用户名>\.agents\skills\personal-study-coach\` |
+| DeepSeek Harness（DSH） | `~/.dsh/skills/personal-study-coach/` | `C:\Users\<用户名>\.dsh\skills\personal-study-coach\` |
+| Claude Code | `~/.claude/skills/personal-study-coach/` | `C:\Users\<用户名>\.claude\skills\personal-study-coach\` |
+| WorkBuddy（国内版） | `~/.workbuddy/skills/personal-study-coach/` | `C:\Users\<用户名>\.workbuddy\skills\personal-study-coach\` |
+| WorkBuddy AI（国际版） | `~/.workbuddy-ai/skills/personal-study-coach/` | `C:\Users\<用户名>\.workbuddy-ai\skills\personal-study-coach\` |
+| Qoder IDE | `~/.qoder/skills/personal-study-coach/` | `C:\Users\<用户名>\.qoder\skills\personal-study-coach\` |
+| QoderWork | `~/.qoderwork/skills/personal-study-coach/` | `C:\Users\<用户名>\.qoderwork\skills\personal-study-coach\` |
+
+表格是用户级目录示例。DSH 的专用目录由 `DSH_HOME` 决定，共用目录由 `DSH_AGENTS_HOME` 决定。未设置时，DSH 也会读取 `~/.agents/skills`，可以和 Codex 共用一份。相关文档见 [Codex](https://learn.chatgpt.com/docs/build-skills)、[DSH](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/skill/skill-filesystem/README.md)、[Claude Code](https://code.claude.com/docs/en/skills)、[Qoder IDE](https://docs.qoder.com/zh/extensions/skills)和 [QoderWork](https://docs.qoder.com/qoderwork/skills)。
+
+WorkBuddy 的用户目录随版本而异。也可以在客户端打开「技能 → 添加技能 → 上传技能」，导入包含脚本和资源的完整技能包。参见 [WorkBuddy 国内版目录说明](https://developer.cloud.tencent.com/techpedia/2610/20530)和 [WorkBuddy AI 导入指南](https://www.tencentcloud.com/zh/document/product/1316/84503)。
+
+### macOS（终端）
+
+以下以 Codex 为例。用表中对应的 `skills` 目录替换第一行的路径即可安装到其他工具，例如 Claude Code 用 `$HOME/.claude/skills`。安装给 DSH 时，可以把前两行的注释互换。
+
 ```bash
-git clone https://github.com/jeremylinnnnn/personal-study-coach.git \
-  ~/.workbuddy-ai/skills/personal-study-coach
+install_root="$HOME/.agents/skills"
+# install_root="${DSH_HOME:-$HOME/.dsh}/skills"
+mkdir -p "$install_root"
+git clone https://github.com/jeremylinnnnn/personal-study-coach.git "$install_root/personal-study-coach"
 ```
 
-Claude Code 的安装路径是 `~/.claude/skills/personal-study-coach`。
+### Windows（PowerShell）
 
-## 目录结构
+以下以 Codex 为例。使用其他工具时，修改 `Join-Path` 后的相对路径，例如 Qoder IDE 用 `.qoder\skills`。安装给 DSH 时，注释第一行并去掉接下来两行开头的 `#`。
 
+```powershell
+$InstallRoot = Join-Path $HOME '.agents\skills'
+# $DshHome = if ($env:DSH_HOME) { $env:DSH_HOME } else { Join-Path $HOME '.dsh' }
+# $InstallRoot = Join-Path $DshHome 'skills'
+New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
+git clone https://github.com/jeremylinnnnn/personal-study-coach.git (Join-Path $InstallRoot 'personal-study-coach')
 ```
-SKILL.md   全部内容
-```
 
-## 语言
+安装完成后，`personal-study-coach` 目录下应直接看到 `SKILL.md`、`assets/`、`references/`、`scripts/`。
 
-skill 默认用中文讲解，可以改成其他语言。方法论部分与语言无关。
+**更新已有安装。** Git 克隆安装且没有本地改动时，在安装目录运行 `git pull --ff-only`。如果已经在 `SKILL.md` 中登记了复习总表路径，先保留那一行。可以把新版克隆到另一目录，合并或替换 Skill 文件后，把登记行写回安装目录中的 `SKILL.md`。工作区里的复习总表、各科卡库和学习笔记继续使用原来的文件。
+
+## 第一次使用
+
+1. 在 Agent 里打开你的学习工作区。尽可能把教材、课件、作业、测试题和历年试卷放进去，先放手头已有的材料即可。
+2. 在 Codex 里输入 `$personal-study-coach`，在 DSH 或 Claude Code 里输入 `/personal-study-coach`，也可以从工具的技能列表中选择。Skill 会用短菜单介绍能做什么。
+3. 选一个成果开始。例如「选 2，电磁学课件当前章节，按顺序嵌入原页」。备考可以直接说「进入备考模式，我想把两门课排进同一张复习总表」。
+
+讲解会优先采用课程的术语和答题习惯。逐页讲义、知识积累和复习资料保存在学习工作区。旧版设置在工作区根目录 `.study-coach.json` 中的 `accumulate_every` 仍可读取。
+
+HTML 卡片与全局排表脚本需要 Python 3.9 或更新版本。macOS 通常用 `python3`，Windows 可用 `py -3` 或 `python`。运行命令、时间设置和保存方式见 [备考模式说明](references/exam-mode.md)。
 
 ## 许可
 
-MIT，见 [LICENSE](LICENSE)。
+本仓库采用 [MIT 许可](LICENSE)。FSRS 排期实现使用了 [py-fsrs 6.3.3](https://github.com/open-spaced-repetition/py-fsrs/tree/v6.3.3) 的公式，版权与许可见 [第三方声明](THIRD_PARTY_NOTICES.md)。
